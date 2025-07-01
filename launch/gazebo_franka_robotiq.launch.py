@@ -120,6 +120,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
         launch_arguments={'gz_args': f'{world_path}'+' -r', }.items(),
+        #launch_arguments={'gz_args': 'empty.sdf -r', }.items(),
     )
 
     # Spawn
@@ -150,6 +151,12 @@ def generate_launch_description():
     gravity_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
                 'gravity_compensation_example_controller'],
+        output='screen'
+    )
+
+    cartesian_motion_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
+                'cartesian_motion_controller'],
         output='screen'
     )
 
@@ -196,6 +203,12 @@ def generate_launch_description():
             event_handler=OnProcessExit(
                 target_action=joint_impedance_example_controller,
                 on_exit=[robotiq_gripper_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=robotiq_gripper_controller,
+                on_exit=[cartesian_motion_controller],
             )
         ),
         # Node(

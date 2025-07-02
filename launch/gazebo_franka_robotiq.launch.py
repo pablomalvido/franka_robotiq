@@ -50,7 +50,7 @@ def get_robot_description(context: LaunchContext, arm_id, load_gripper, franka_h
             'ros2_control': 'true',
             'gazebo': 'true',
             'ee_id': 'robotiq', #franka_hand_str,
-            'gazebo_effort': 'true',
+            'gazebo_effort': 'false',
             'use_fake_hardware': 'false',
         }
     )
@@ -119,8 +119,8 @@ def generate_launch_description():
     gazebo_empty_world = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': f'{world_path}'+' -r', }.items(),
-        #launch_arguments={'gz_args': 'empty.sdf -r', }.items(),
+        #launch_arguments={'gz_args': f'{world_path}'+' -r', }.items(),
+        launch_arguments={'gz_args': 'empty.sdf -r', }.items(),
     )
 
     # Spawn
@@ -149,20 +149,20 @@ def generate_launch_description():
     )
 
     gravity_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
                 'gravity_compensation_example_controller'],
         output='screen'
     )
 
     cartesian_motion_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
                 'cartesian_motion_controller'],
         output='screen'
     )
 
-    joint_impedance_example_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-                'joint_impedance_example_controller'],
+    joint_position_example_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
+                'joint_position_example_controller'],
         output='screen'
     )
 
@@ -187,30 +187,31 @@ def generate_launch_description():
                     on_exit=[load_joint_state_broadcaster],
                 )
         ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=load_joint_state_broadcaster,
-        #         on_exit=[gravity_controller],
-        #     )
-        # ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_broadcaster,
-                on_exit=[joint_impedance_example_controller],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=joint_impedance_example_controller,
-                on_exit=[robotiq_gripper_controller],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=robotiq_gripper_controller,
                 on_exit=[cartesian_motion_controller],
             )
         ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=cartesian_motion_controller,
+                on_exit=[gravity_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[joint_position_example_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_position_example_controller,
+                on_exit=[robotiq_gripper_controller],
+            )
+        ),
+
         # Node(
         #     package='joint_state_publisher',
         #     executable='joint_state_publisher',

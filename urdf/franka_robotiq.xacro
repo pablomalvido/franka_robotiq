@@ -182,7 +182,7 @@
           arm_prefix="${arm_prefix}"
           multi_arm="$(arg multi_arm)"
           ee_id="$(arg ee_id)"
-          index="$(arg index)"
+          index="${index}"
           ns="$(arg ns)"
       />
     </xacro:if>

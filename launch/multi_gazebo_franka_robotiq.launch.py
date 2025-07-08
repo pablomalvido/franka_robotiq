@@ -31,10 +31,7 @@ from launch.substitutions import  LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def get_robot_description(context: LaunchContext, arm_id, load_gripper, franka_hand):
-    arm_id_str = context.perform_substitution(arm_id)
-    load_gripper_str = context.perform_substitution(load_gripper)
-    franka_hand_str = context.perform_substitution(franka_hand)
+def get_robot_description(context: LaunchContext):
 
     franka_xacro_file = os.path.join(
         get_package_share_directory('franka_robotiq'),
@@ -78,40 +75,13 @@ def get_robot_description(context: LaunchContext, arm_id, load_gripper, franka_h
 
 def generate_launch_description():
     # Configure ROS nodes for launch
-    load_gripper_name = 'load_gripper'
-    franka_hand_name = 'franka_hand'
-    arm_id_name = 'arm_id'
-    namespace_name = 'namespace'
-
-    load_gripper = LaunchConfiguration(load_gripper_name)
-    franka_hand = LaunchConfiguration(franka_hand_name)
-    arm_id = LaunchConfiguration(arm_id_name)
-    namespace = LaunchConfiguration(namespace_name)
-
-    load_gripper_launch_argument = DeclareLaunchArgument(
-            load_gripper_name,
-            default_value='false',
-            description='true/false for activating the gripper')
-    franka_hand_launch_argument = DeclareLaunchArgument(
-            franka_hand_name,
-            default_value='franka_hand',
-            description='Default value: franka_hand')
-    arm_id_launch_argument = DeclareLaunchArgument(
-            arm_id_name,
-            default_value='fr3',
-            description='Available values: fr3, fp3 and fer')
-    namespace_launch_argument = DeclareLaunchArgument(
-        namespace_name,
-        default_value='',
-        description='Namespace for the robot. If not set, the robot will be launched in the root namespace.')
 
     # Get robot description
     robot_state_publisher = OpaqueFunction(
-        function=get_robot_description,
-        args=[arm_id, load_gripper, franka_hand])
+        function=get_robot_description)
 
-    pkg_my_sim = get_package_share_directory('franka_robotiq')
-    world_path = os.path.join(pkg_my_sim, 'worlds', 'gravity_zero.sdf')
+    #pkg_my_sim = get_package_share_directory('franka_robotiq')
+    #world_path = os.path.join(pkg_my_sim, 'worlds', 'gravity_zero.sdf')
 
     # gazebo_world = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource(
@@ -179,10 +149,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        load_gripper_launch_argument,
-        franka_hand_launch_argument,
-        arm_id_launch_argument,
-        namespace_launch_argument,
         gazebo_empty_world,
         robot_state_publisher,
         rviz,
@@ -194,19 +160,19 @@ def generate_launch_description():
                 )
         ),
         
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=load_joint_state_broadcaster,
-        #         on_exit=[left_cartesian_motion_controller],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[left_cartesian_motion_controller],
+            )
+        ),
 
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=left_cartesian_motion_controller,
-        #         on_exit=[right_cartesian_motion_controller],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=left_cartesian_motion_controller,
+                on_exit=[right_cartesian_motion_controller],
+            )
+        ),
         
         # RegisterEventHandler(
         #     event_handler=OnProcessExit(

@@ -132,7 +132,7 @@ def generate_launch_description():
     ### ROBOT CONTROLLER ###
     robot_controller = Node(
         package='controller_manager',
-        executable='spawner',
+        executable='spawner', 
         arguments=['joint_impedance_example_controller'],
         output='screen',
     )

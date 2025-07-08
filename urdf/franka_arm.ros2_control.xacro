@@ -12,7 +12,7 @@
              arm_prefix:=''
              multi_arm:=false
              ee_id:=''
-             index:='0'
+             index:=0
              ns:=''
              gripper_closed_position:=0.7929">
              
@@ -158,9 +158,9 @@
           </plugin>
         </gazebo>
       </xacro:unless>
-      <xacro:if value="${multi_arm==1 and index=='0'}">
+      <xacro:if value="${multi_arm==1 and index==0}">
         <gazebo>
-          <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+          <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
             <parameters>$(find franka_robotiq)/config/multi_franka_gazebo_controllers.yaml</parameters>
           </plugin>
         </gazebo>

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fr3">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="$(arg arm_prefix)fr3">
 
   <xacro:include filename="$(find franka_robotiq)/urdf/franka_robotiq.xacro"/>
 
@@ -12,6 +12,9 @@
 
   <!-- Don't print a prefix for joints, visuals, and links? -->
   <xacro:arg name="no_prefix" default="false"/>
+
+  <!-- Prefix for joints, visuals, and links -->
+  <xacro:arg name="arm_prefix" default=""/>
 
   <!-- Should an end-effector be mounted at the flange?" -->
   <xacro:arg name="hand" default="true" />
@@ -43,8 +46,17 @@
   <!-- For a multi arm setup, we need a threaded robot running async-->
   <xacro:arg name="multi_arm" default="false" />
 
+  <!-- For a multi arm setup, we need a threaded robot running async-->
+  <xacro:arg name="ns" default="" />
+
+  <!-- Position and orientation with respect to the base -->
+  <xacro:arg name="xyz" default="0 0 0" />
+  <xacro:arg name="rpy" default="0 0 0" />
+
   <!-- Port for gripper communication-->
   <xacro:arg name="com_port" default='/dev/ttyUSB0' />
+
+  <xacro:arg name="index" default='0' />
 
   <xacro:franka_robotiq arm_id="$(arg arm_id)"
                       joint_limits="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}"
@@ -61,8 +73,12 @@
                       fake_sensor_commands="$(arg fake_sensor_commands)"
                       gazebo_effort="$(arg gazebo_effort)"
                       no_prefix="$(arg no_prefix)"
-                      arm_prefix= ""
-                      connected_to= "base">
+                      arm_prefix= "$(arg arm_prefix)"
+                      connected_to= "base"
+                      index="$(arg index)"
+                      xyz="$(arg xyz)"
+                      rpy="$(arg rpy)"
+                      ns="$(arg ns)">
   </xacro:franka_robotiq>
 
 </robot>

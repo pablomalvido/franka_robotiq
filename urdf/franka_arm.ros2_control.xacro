@@ -12,6 +12,8 @@
              arm_prefix:=''
              multi_arm:=false
              ee_id:=''
+             index:='0'
+             ns:=''
              gripper_closed_position:=0.7929">
              
     <xacro:property name="arm_prefix_modified" value="${'' if arm_prefix == '' else arm_prefix + '_'}" />
@@ -26,7 +28,7 @@
           </xacro:if>
 
           <xacro:if value="${gazebo}">
-            <plugin>ign_ros2_control/IgnitionSystem</plugin>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
           </xacro:if>
 
           <xacro:if value="${use_fake_hardware == 0 and gazebo == 0 and multi_arm == 0}">
@@ -41,12 +43,6 @@
           </xacro:if>
         </hardware>
 
-        <!--xacro:if value="${gazebo and hand and ee_id == 'robotiq'}">
-          <hardware>
-            <plugin>ign_ros2_control/IgnitionSystem</plugin>
-          </hardware>
-        </xacro:if-->
-
       <xacro:macro name="configure_joint" params="joint_name initial_position">
         <joint name="${joint_name}">
           <!--
@@ -54,7 +50,7 @@
             https://github.com/ros-controls/gz_ros2_control/issues/343
 
             Command Interfaces -->
-          <xacro:if value="${multi_arm == 0}">
+          <xacro:if value="${multi_arm == 0 or gazebo == 1 or use_fake_hardware == 1}">
             <command_interface name="position"/>
             <command_interface name="velocity"/>
           </xacro:if>
@@ -148,19 +144,29 @@
 
     </ros2_control>
     <xacro:if value="${gazebo}">
-      <gazebo>
-        <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-          <parameters>$(find franka_gazebo_bringup)/config/franka_gazebo_controllers.yaml</parameters>
-        </plugin>
-      </gazebo>
+      <xacro:unless value="${multi_arm}">
+        <gazebo>
+          <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <!--parameters>$(find franka_robotiq)/config/franka_gazebo_controllers.yaml</parameters-->
+            <!--parameters>$(find franka_bringup)/config/controllers.yaml</parameters-->
+            <parameters>$(find franka_robotiq)/config/${arm_prefix}_controllers.yaml</parameters>
+            <!--controller_manager_prefix_node_name>${ns}/</controller_manager_prefix_node_name-->
+            <ros>
+              <namespace>${ns}</namespace>
+            </ros>
+            <!--robot_param>robot_description</robot_param-->
+          </plugin>
+        </gazebo>
+      </xacro:unless>
+      <xacro:if value="${multi_arm==1 and index=='0'}">
+        <gazebo>
+          <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+            <parameters>$(find franka_robotiq)/config/multi_franka_gazebo_controllers.yaml</parameters>
+          </plugin>
+        </gazebo>
+      </xacro:if>
     </xacro:if>
-    <!--xacro:if value="${gazebo and hand and ee_id == 'robotiq'}">
-      <gazebo>
-        <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-          <parameters>$(find robotiq_description)/config/robotiq_controllers.yaml</parameters>
-        </plugin>
-      </gazebo>
-    </xacro:if-->
+
 
   </xacro:macro>
 </robot>

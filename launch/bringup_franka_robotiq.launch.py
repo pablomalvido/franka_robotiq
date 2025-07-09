@@ -65,7 +65,7 @@ def robot_description_dependent_nodes_spawner(
                                            }).toprettyxml(indent='  ')
 
     franka_controllers = PathJoinSubstitution(
-        [FindPackageShare('franka_robotiq'), 'config', 'controllers.yaml'])
+        [FindPackageShare('franka_robotiq'), 'config', 'bringup_controllers.yaml'])
 
     return [
         Node(

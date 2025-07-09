@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="$(arg arm_prefix)fr3">
+<!--robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="$(arg arm_prefix)fr3"-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fr3">
 
   <xacro:include filename="$(find franka_robotiq)/urdf/franka_robotiq.xacro"/>
 
@@ -20,13 +21,13 @@
   <xacro:arg name="hand" default="true" />
 
   <!-- Which end-effector would be mounted at the flange?" -->
-  <xacro:arg name="ee_id" default="franka_hand" />
+  <xacro:arg name="ee_id" default="robotiq" />
 
   <!-- Should self-collision be enabled? -->
   <xacro:arg name="with_sc" default="false" />
 
   <!-- Is the robot being controlled with ros2_control?" -->
-  <xacro:arg name="ros2_control" default="false" />
+  <xacro:arg name="ros2_control" default="true" />
 
   <!-- IP address or hostname of the robot" -->
   <xacro:arg name="robot_ip" default="" />

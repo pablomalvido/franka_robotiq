@@ -149,7 +149,7 @@
           <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
             <!--parameters>$(find franka_robotiq)/config/franka_gazebo_controllers.yaml</parameters-->
             <!--parameters>$(find franka_bringup)/config/controllers.yaml</parameters-->
-            <parameters>$(find franka_robotiq)/config/${arm_prefix}_controllers.yaml</parameters>
+            <parameters>$(find franka_robotiq)/config/${arm_prefix_modified}controllers.yaml</parameters>
             <!--controller_manager_prefix_node_name>${ns}/</controller_manager_prefix_node_name-->
             <ros>
               <namespace>${ns}</namespace>

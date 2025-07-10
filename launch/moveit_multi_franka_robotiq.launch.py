@@ -38,19 +38,25 @@ def get_robot_description(context: LaunchContext):
     franka_xacro_file = os.path.join(
         get_package_share_directory('franka_robotiq'),
         'urdf',
-        'fr3_robotiq.urdf.xacro'
+        'multi_arm.urdf.xacro'
     )
 
     robot_description_config = xacro.process_file(
         franka_xacro_file,
         mappings={
-            'arm_id': 'fr3', #arm_id_str,
-            'hand': 'true', #load_gripper_str,
             'ros2_control': 'true',
+            'hand': 'false', 
+            'ee_id': 'robotiq',
             'gazebo': 'true',
-            'ee_id': 'robotiq', #franka_hand_str,
-            'gazebo_effort': 'false',
+            'effort_gazebo': 'false',
+            'arm_ids': "['fr3','fr3']",
+            'robot_ips': "['','']",
+            'hand': 'false',
             'use_fake_hardware': 'false',
+            'arm_prefixes': "['left','right']",
+            'xyz_values': "['0 0.4 0', '0 -0.4 0']",
+            'rpy_values': "['0 0 0', '0 0 0']",
+            'number_of_robots': '2',
         }
     )
     robot_description = {'robot_description': robot_description_config.toxml()}
@@ -71,11 +77,12 @@ def get_robot_description(context: LaunchContext):
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
     absolute_file_path = os.path.join(package_path, file_path)
-
+    print(file_path)
     try:
         with open(absolute_file_path, 'r') as file:
             return yaml.safe_load(file)
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+        print("ERROR")
         return None
     
 
@@ -84,18 +91,20 @@ def generate_launch_description():
     # planning_context
     franka_xacro_file = os.path.join(
         get_package_share_directory('franka_robotiq'),
-        'urdf', 'fr3_robotiq.urdf.xacro'
+        'urdf',
+        'multi_arm.urdf.xacro'
     )
 
     robot_description_config = Command(
         [FindExecutable(name='xacro'), ' ', franka_xacro_file, 
-            ' arm_id:=fr3', #arm_id_str,
-            ' hand:=true', #load_gripper_str,
             ' ros2_control:=true',
+            ' hand:=false', 
+            ' ee_id:=robotiq',
             ' gazebo:=true',
-            ' ee_id:=robotiq', #franka_hand_str,
-            ' gazebo_effort:=false',
-            ' use_fake_hardware:=false'])
+            ' effort_gazebo:=false',
+            ' hand:=true',
+            ' use_fake_hardware:=false',
+            ' number_of_robots:=2'])
 
     robot_description = {'robot_description': ParameterValue(
         robot_description_config, value_type=str)}
@@ -103,7 +112,7 @@ def generate_launch_description():
     franka_semantic_xacro_file = os.path.join(
         get_package_share_directory('franka_robotiq_moveit_config'),
         'config',
-        'fr3.srdf.xacro'
+        'multi_fr3.srdf.xacro'
     )
 
     robot_description_semantic_config = Command(
@@ -115,7 +124,7 @@ def generate_launch_description():
         robot_description_semantic_config, value_type=str)}
 
     kinematics_yaml = load_yaml(
-        'franka_robotiq_moveit_config', 'config/kinematics.yaml'
+        'franka_robotiq_moveit_config', 'config/multi_kinematics.yaml'
     )
 
     # Planning Functionality
@@ -132,13 +141,13 @@ def generate_launch_description():
         }
     }
     ompl_planning_yaml = load_yaml(
-        'franka_robotiq_moveit_config', 'config/ompl_planning.yaml'
+        'franka_robotiq_moveit_config', 'config/multi_ompl_planning.yaml'
     )
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
-        'franka_robotiq_moveit_config', 'config/custom_moveit_controllers.yaml'
+        'franka_robotiq_moveit_config', 'config/multi_custom_moveit_controllers.yaml'
     )
     moveit_controllers = {
         'moveit_simple_controller_manager': moveit_simple_controllers_yaml,
@@ -181,7 +190,7 @@ def generate_launch_description():
     # RViz
     rviz_base = os.path.join(get_package_share_directory(
         'franka_robotiq_moveit_config'), 'config')
-    rviz_full_config = os.path.join(rviz_base, 'moveit_v2.rviz')
+    rviz_full_config = os.path.join(rviz_base, 'moveit.rviz')
 
     rviz_node = Node(
         package='rviz2',
@@ -260,15 +269,15 @@ def generate_launch_description():
         output='screen'
     )
 
-    gravity_controller = ExecuteProcess(
+    left_cartesian_motion_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
-                'gravity_compensation_example_controller'],
+                'left_cartesian_motion_controller'],
         output='screen'
     )
 
-    cartesian_motion_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-                'cartesian_motion_controller'],
+    right_cartesian_motion_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'inactive',
+                'right_cartesian_motion_controller'],
         output='screen'
     )
 
@@ -278,15 +287,27 @@ def generate_launch_description():
         output='screen'
     )
 
-    moveit_gripper_controller = ExecuteProcess(
+    left_moveit_gripper_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-                'robotiq_gripper_controller'],
+                'left_robotiq_gripper_controller'],
         output='screen'
     )
 
-    moveit_franka_controller = ExecuteProcess(
+    left_moveit_franka_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-                'joint_trajectory_controller'],
+                'left_joint_trajectory_controller'],
+        output='screen'
+    )
+
+    right_moveit_gripper_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
+                'right_robotiq_gripper_controller'],
+        output='screen'
+    )
+
+    right_moveit_franka_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
+                'right_joint_trajectory_controller'],
         output='screen'
     )
 
@@ -311,21 +332,39 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_broadcaster,
-                on_exit=[moveit_franka_controller],
+                on_exit=[left_moveit_franka_controller],
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=moveit_franka_controller,
-                on_exit=[moveit_gripper_controller],
+                target_action=load_joint_state_broadcaster,
+                on_exit=[left_moveit_gripper_controller],
             )
         ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=load_joint_state_broadcaster,
-        #         on_exit=[cartesian_motion_controller],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[right_moveit_franka_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[right_moveit_gripper_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[left_cartesian_motion_controller],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=load_joint_state_broadcaster,
+                on_exit=[right_cartesian_motion_controller],
+            )
+        ),
         # RegisterEventHandler(
         #     event_handler=OnProcessExit(
         #         target_action=cartesian_motion_controller,
